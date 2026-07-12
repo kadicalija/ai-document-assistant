@@ -4,7 +4,7 @@ from fastapi  import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from pathlib  import Path
 import shutil
-
+from document_service import list_documents
 
 from llm import generate_llm_response
 
@@ -41,3 +41,7 @@ def upload_pdf(file: UploadFile = File(...)):
         "message": "File uploaded successfully.",
         "filename": file.filename
     }
+
+@app.get("/documents")
+def get_documents():
+    return list_documents()
