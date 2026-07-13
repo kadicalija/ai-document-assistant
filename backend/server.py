@@ -2,13 +2,16 @@ import fileinput
 
 from fastapi  import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
+class AskDocumentRequest(BaseModel):
+    filename:str
+    question:str
 from pathlib  import Path
 import shutil
 from document_service import (
     list_documents,
     delete_document
 )
-
+from document_service import extract_text
 from llm import generate_llm_response
 
 app = FastAPI()
@@ -52,3 +55,23 @@ def get_documents():
 @app.delete("/documents/{filename}")
 def delete_uploaded_document(filename: str):
     return delete_document(filename)
+
+@app.post("/ask-document")
+def ask_document(request: AskDocumentRequest):
+    try:
+        document_text = extract_text(request.filename)
+
+        answer = generate_llm_response(
+            message=request.question,
+            context=document_text
+        )
+
+        return {
+            "answer": answer
+        }
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found."
+        )

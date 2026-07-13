@@ -1,6 +1,7 @@
 from pathlib import Path
 from fastapi import HTTPException
 from pathlib import Path
+from pypdf import PdfReader
 
 UPLOAD_FOLDER = Path("uploads")
 
@@ -30,3 +31,21 @@ def delete_document(filename:str):
     return{
         "message": "Document deleted successfully"
     }
+
+def extract_text(filename: str)->str:
+    file_path = UPLOAD_FOLDER / filename
+
+    if not file_path.exists():
+        raise FileNotFoundError("Document not found.")
+    with open(file_path, "rb") as file:
+        reader = PdfReader(file)
+
+        pages = []
+
+        for page in reader.pages:
+            page_text = page.extract_text()
+
+            if page_text:
+                pages.append(page_text)
+
+            return "\n".join(pages)
