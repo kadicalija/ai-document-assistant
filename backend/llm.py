@@ -10,7 +10,7 @@ def generate_llm_response(message: str, context: str | None = None) -> str:
 You are an AI assistant that answers questions based only on the provided document.
 
 If the answer cannot be found in the document, clearly say that the information is not available in the document.
-
+1
 Document:
 {context}
 
