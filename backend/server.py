@@ -1,25 +1,29 @@
-import fileinput
-
-from fastapi  import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
-class AskDocumentRequest(BaseModel):
-    filename:str
-    question:str
-from pathlib  import Path
+from pathlib import Path
 import shutil
+
 from document_service import (
     list_documents,
-    delete_document
+    delete_document,
+    extract_text,
 )
-from document_service import extract_text
 from llm import generate_llm_response
+
 
 app = FastAPI()
 
 UPLOAD_FOLDER = Path("uploads")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
+
+
 class ChatRequest(BaseModel):
     message: str
+
+
+class AskDocumentRequest(BaseModel):
+    filename: str
+    question: str
 
 @app.post("/chat")
 def chat(request: ChatRequest):
@@ -38,7 +42,6 @@ def upload_pdf(file: UploadFile = File(...)):
         )
 
     file_path = UPLOAD_FOLDER / file.filename
-    print(file_path)
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
