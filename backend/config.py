@@ -5,3 +5,4 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = "gemini-flash-latest"
+GEMINI_EMBEDDING_MODEL = "gemini-embedding-001"

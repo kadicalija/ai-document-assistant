@@ -6,7 +6,8 @@ import shutil
 from document_service import (
     list_documents,
     delete_document,
-    extract_text,
+    index_document,
+    answer_question_about_document,
 )
 from llm import generate_llm_response
 
@@ -46,9 +47,12 @@ def upload_pdf(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+    index_result = index_document(file.filename)
+
     return {
-        "message": "File uploaded successfully.",
-        "filename": file.filename
+        "message": "File uploaded and indexed successfully.",
+        "filename": file.filename,
+        "chunks_indexed": index_result["chunks_indexed"],
     }
 
 @app.get("/documents")
@@ -62,11 +66,10 @@ def delete_uploaded_document(filename: str):
 @app.post("/ask-document")
 def ask_document(request: AskDocumentRequest):
     try:
-        document_text = extract_text(request.filename)
 
-        answer = generate_llm_response(
-            message=request.question,
-            context=document_text
+        answer = answer_question_about_document(
+            filename=request.filename,
+            question=request.question,
         )
 
         return {
