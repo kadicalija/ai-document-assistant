@@ -91,12 +91,12 @@ uvicorn server:app --reload
 - [x] FastAPI backend
 - [x] Google Gemini integration
 - [x] PDF upload endpoint
-- [ ] Document management API
-- [ ] PDF parsing
-- [ ] Text chunking
-- [ ] Embeddings
-- [ ] Vector database
-- [ ] RAG pipeline
+- [x] Document management API
+- [x] PDF parsing
+- [x] Text chunking
+- [x] Embeddings
+- [x] Vector database
+- [x] RAG pipeline
 - [ ] React frontend
 
 ## Roadmap
