@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import Header from "./components/Header";
+import UploadCard from "./components/UploadCard";
+import DocumentList from "./components/DocumentList";
+import ChatWindow from "./components/ChatWindow";
+import MessageInput from "./components/MessageInput";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -8,7 +13,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState("");
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
+  const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -62,6 +67,7 @@ function App() {
       );
 
       setSelectedDocument(data.filename);
+      setMessages([]);
       setSelectedFile(null);
       event.target.reset();
 
@@ -84,7 +90,8 @@ function App() {
     try {
       setIsAsking(true);
       setError("");
-      setAnswer("");
+
+      const userQuestion = question;
 
       const response = await fetch(`${API_URL}/ask-document`, {
         method: "POST",
@@ -102,7 +109,20 @@ function App() {
       }
 
       const data = await response.json();
-      setAnswer(data.answer);
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "user",
+            content: question,
+          },
+          {
+            role: "assistant",
+            content: data.answer,
+          },
+        ]);
+
+setQuestion("");
     } catch (error) {
       setError(error.message);
     } finally {
@@ -134,8 +154,8 @@ async function handleDeleteDocument(filename){
       if(selectedDocument === filename){
         setSelectedDocument("");
         setQuestion("");
-        setAnswer("");
-      }
+        setMessages([]);
+  }
 
      setMessage(`${filename} was deleted successfully.`);
 
@@ -152,98 +172,53 @@ useEffect(() => {
 }, []);
 
   return (
-    <main className="app">
-      <h1>AI Document Assistant</h1>
-      <p>Upload documents and ask AI-powered questions.</p>
+   <main className="app">
 
-      <section>
-        <h2>Upload a document</h2>
+  <Header />
 
-        <form onSubmit={handleUpload}>
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={(event) => setSelectedFile(event.target.files[0])}
-          />
+  <div className="dashboard">
 
-          <button type="submit" disabled={isUploading}>
-            {isUploading ? "Uploading and indexing..." : "Upload PDF"}
-          </button>
-        </form>
+    <aside className="sidebar">
 
-        {message && <p className="success">{message}</p>}
-        {error && <p className="error">{error}</p>}
-      </section>
+      <UploadCard
+        selectedFile={selectedFile}
+        setSelectedFile={setSelectedFile}
+        handleUpload={handleUpload}
+        isUploading={isUploading}
+        message={message}
+        error={error}
+      />
 
-      <section>
-        <h2>Uploaded documents</h2>
+      <DocumentList
+        documents={documents}
+        selectedDocument={selectedDocument}
+        setSelectedDocument={setSelectedDocument}
+        deletingFilename={deletingFilename}
+        handleDeleteDocument={handleDeleteDocument}
+        setMessages={setMessages}
+      />
 
-        {documents.length === 0 ? (
-          <p>No documents uploaded yet.</p>
-        ) : (
-          <ul className="document-list">
-            {documents.map((document) => (
-              <div className="document-item">
-                  <button
-                    className={
-                      selectedDocument === document.filename
-                        ? "document-button selected"
-                        : "document-button"
-                    }
-                    onClick={() => {
-                      setSelectedDocument(document.filename);
-                      setAnswer("");
-                    }}
-                  >
-                    {document.filename}
-                  </button>
+    </aside>
 
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDeleteDocument(document.filename)}
-                    disabled={deletingFilename === document.filename}
-                  >
-                    {deletingFilename === document.filename ? "Deleting..." : "Delete"}
-                  </button>
-                </div>
-            ))}
-          </ul>
-        )}
-      </section>
+    <section className="workspace">
 
-      <section>
-        <h2>Ask a document</h2>
+      <ChatWindow
+        messages={messages}
+        />
+        <MessageInput
+          selectedDocument={selectedDocument}
+          question={question}
+          setQuestion={setQuestion}
+          handleAskQuestion={handleAskQuestion}
+          isAsking={isAsking}
+        />
 
-        {selectedDocument ? (
-          <>
-            <p>
-              Selected document: <strong>{selectedDocument}</strong>
-            </p>
 
-            <form onSubmit={handleAskQuestion}>
-              <textarea
-                placeholder="Ask a question about the selected document..."
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-              />
+    </section>
 
-              <button type="submit" disabled={isAsking}>
-                {isAsking ? "Generating answer..." : "Ask question"}
-              </button>
-            </form>
-          </>
-        ) : (
-          <p>Select a document first.</p>
-        )}
+  </div>
 
-        {answer && (
-          <div className="answer">
-            <h3>AI Answer</h3>
-            <p>{answer}</p>
-          </div>
-        )}
-      </section>
-    </main>
+</main>
   );
 }
 
